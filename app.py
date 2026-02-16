@@ -66,6 +66,7 @@ def analyze_grid_openrouter(grid_img, item_metadata):
     [{{"itemId": "ID", "classification": "Necklace/Bangle/Ring/etc", "purityMarking": "22K/18K/Unverifiable", "huid": "6-digit code or Unverifiable", "defectsFound": [], "stoneCount": int, "estGrossWeight": float, "estNetWeight": float, "status": "Pass/Fail"}}]
     """
 
+    print(f"🚀 Calling Gemini API for {len(item_metadata)} items...")
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
         headers={
@@ -83,10 +84,12 @@ def analyze_grid_openrouter(grid_img, item_metadata):
             "response_format": {"type": "json_object"}
         })
     )
+    print(f"📡 Gemini Status Code: {response.status_code}")
 
     if response.status_code == 200:
         result = response.json()
         content = result['choices'][0]['message']['content']
+        print(f"📝 Gemini Response: {content[:200]}...") # Log first 200 chars
         data = json.loads(content)
         if isinstance(data, dict) and 'featureData' in data:
             return data['featureData']
@@ -98,6 +101,7 @@ def analyze_grid_openrouter(grid_img, item_metadata):
                     return data[key]
         return [data] if isinstance(data, dict) else data
     else:
+        print(f"❌ Gemini Error: {response.text}")
         return None
 
 
@@ -238,7 +242,7 @@ with col1:
     if uploaded_file:
         uploaded_bytes = uploaded_file.getvalue()
         image = Image.open(uploaded_file)
-        st.image(image, use_column_width=True)
+        st.image(image, use_container_width=True)
 
 analyze_clicked = st.button("🔍 Analyze Image", type="primary")
 
@@ -273,7 +277,7 @@ if analyze_clicked:
 
                 # ─── Detection Output ─────────────────────────────
                 st.subheader(f"🔎 {model_choice} Detection Output")
-                st.image(annotated_img, caption=f"{model_choice} — {num_detections} items detected", use_column_width=True)
+                st.image(annotated_img, caption=f"{model_choice} — {num_detections} items detected", use_container_width=True)
 
                 # ─── Gemini Results Table ─────────────────────────
                 st.subheader("✅ Gemini Analysis Results")
@@ -305,7 +309,7 @@ if analyze_clicked:
                     else:
                         return "background-color: #fef3c7; color: #92400e; font-weight: 600"
 
-                styled_df = df.style.applymap(color_status, subset=["Status"])
+                styled_df = df.style.map(color_status, subset=["Status"])
                 st.dataframe(styled_df, use_container_width=True, hide_index=True)
 
                 st.caption("A list of all items identified and analyzed from the image.")
