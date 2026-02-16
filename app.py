@@ -242,7 +242,9 @@ with col1:
     if uploaded_file:
         uploaded_bytes = uploaded_file.getvalue()
         image = Image.open(uploaded_file)
-        st.image(image, use_container_width=True)
+        uploaded_bytes = uploaded_file.getvalue()
+        image = Image.open(uploaded_file)
+        st.image(image, width="stretch")
 
 analyze_clicked = st.button("🔍 Analyze Image", type="primary")
 
@@ -253,6 +255,10 @@ if analyze_clicked:
     elif not OPENROUTER_API_KEY:
         st.error("Missing OPENROUTER_API_KEY in .env file.")
     else:
+        # Debug API Key
+        key_preview = OPENROUTER_API_KEY[:5] + "..." if OPENROUTER_API_KEY else "None"
+        print(f"🔑 API Key loaded: {key_preview} (Length: {len(OPENROUTER_API_KEY)})")
+        
         with st.spinner(f"Analyzing with {model_choice}..."):
             start = time.time()
 
@@ -277,7 +283,7 @@ if analyze_clicked:
 
                 # ─── Detection Output ─────────────────────────────
                 st.subheader(f"🔎 {model_choice} Detection Output")
-                st.image(annotated_img, caption=f"{model_choice} — {num_detections} items detected", use_container_width=True)
+                st.image(annotated_img, caption=f"{model_choice} — {num_detections} items detected", width="stretch")
 
                 # ─── Gemini Results Table ─────────────────────────
                 st.subheader("✅ Gemini Analysis Results")
